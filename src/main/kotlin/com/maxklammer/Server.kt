@@ -54,6 +54,7 @@ suspend fun handleClient(
     try {
         val byteArray = ByteArray(1024) // Buffer for reading incoming data
         val stringBuilder = StringBuilder() // Accumulate client message
+        val klam = KlamProtocol()
 
         while (true) {
             val bytesRead = receiveChannel.readAvailable(byteArray, 0, byteArray.size)
@@ -65,14 +66,11 @@ suspend fun handleClient(
                 println("Received $bytesRead bytes")
                 println("Received messagePart: $messagePart")
 
-                // Check if message contains the special character '!'
-                if (stringBuilder.contains("!")) {
-                    val receivedName = stringBuilder.toString().trim()
-                    println("Received name: $receivedName")
+                val response = klam.process(stringBuilder)
 
-                    // Respond with the same name
-                    val response = "Hey, $receivedName".toByteArray()
-                    sendChannel.writeFully(response)
+                if (!response.isNullOrBlank()) {
+                    val message = "Hey, $response".toByteArray()
+                    sendChannel.writeFully(message)
 
                     // Reset the StringBuilder for the next message
                     stringBuilder.clear()
