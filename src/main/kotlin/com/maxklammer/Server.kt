@@ -1,3 +1,5 @@
+@file:Suppress("ktlint:standard:no-wildcard-imports")
+
 package com.maxklammer
 
 import io.ktor.network.selector.*
@@ -39,9 +41,9 @@ suspend fun handleClient(
     val sendChannel = socket.openWriteChannel(autoFlush = true)
     val receiveChannel = socket.openReadChannel()
 
-    // Sending raw bytes
+    // Sending initial messages
     val message1 = "Hello Client, I am the Server!\n".toByteArray()
-    val message2 = "What is your name?\n".toByteArray()
+    val message2 = "What is your name? End your name with '!' to send.\n".toByteArray()
 
     // Send raw byte arrays
     sendChannel.writeFully(message1)
@@ -50,28 +52,38 @@ suspend fun handleClient(
     sendChannel.writeFully("\n".toByteArray())
 
     try {
+        val byteArray = ByteArray(1024) // Buffer for reading incoming data
+        val stringBuilder = StringBuilder() // Accumulate client message
+
         while (true) {
-            val byteArray = ByteArray(1024)
             val bytesRead = receiveChannel.readAvailable(byteArray, 0, byteArray.size)
-
-            val message = byteArray.sliceArray(0 until bytesRead).toString(Charsets.UTF_8)
-
             if (bytesRead > 0) {
+                // Convert bytes to string and append to the message buffer
+                val messagePart = byteArray.sliceArray(0 until bytesRead).toString(Charsets.UTF_8)
+                stringBuilder.append(messagePart)
+
                 println("Received $bytesRead bytes")
-                println("Received name: $message")
-                val response = "Hey, ".toByteArray()
+                println("Received messagePart: $messagePart")
 
-                if (message.endsWith("!\n")) {
-                    println("MEssage end detected")
-                    sendChannel.flush()
+                // Check if message contains the special character '!'
+                if (stringBuilder.contains("!")) {
+                    val receivedName = stringBuilder.toString().trim()
+                    println("Received name: $receivedName")
 
+                    // Respond with the same name
+                    val response = "Hey, $receivedName".toByteArray()
                     sendChannel.writeFully(response)
-                }
 
-                sendChannel.writeFully(response)
+                    // You can choose to close the socket after sending the response if desired:
+                    // socket.close()
+                    break
+                }
             }
         }
     } catch (e: Throwable) {
+        println("An error occurred: $e")
+    } finally {
+        // Always close the socket and release the semaphore
         socket.close()
         semaphore.release()
     }

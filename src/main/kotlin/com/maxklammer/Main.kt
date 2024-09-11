@@ -2,21 +2,21 @@
 
 package com.maxklammer
 
-object Main1 {
+object Server {
     @JvmStatic
     fun main(args: Array<String>) {
         server()
     }
 }
 
-// object Main2 {
-//    @JvmStatic
-//    fun main(args: Array<String>) {
-//        client()
-//    }
-// }
+object Client1 {
+    @JvmStatic
+    fun main(args: Array<String>) {
+        client()
+    }
+}
 
-object Main3 {
+object Client2 {
     @JvmStatic
     fun main(args: Array<String>) {
         client()

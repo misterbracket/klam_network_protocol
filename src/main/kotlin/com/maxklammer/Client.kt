@@ -8,7 +8,6 @@ import io.ktor.utils.io.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import kotlin.system.exitProcess
 
 fun client() {
     runBlocking {
@@ -19,34 +18,30 @@ fun client() {
         val receiveChannel = socket.openReadChannel()
         val sendChannel = socket.openWriteChannel(autoFlush = true)
 
+        // Coroutine for receiving data from the server
         launch(Dispatchers.IO) {
             while (true) {
-                // Buffer for receiving the data as a ByteArray
-                val byteArray = ByteArray(1024) // Define the size of the buffer as needed
-
-                // Read from the input stream into the byteArray
+                val byteArray = ByteArray(1024) // Buffer for receiving the data
                 val bytesRead = receiveChannel.readAvailable(byteArray, 0, byteArray.size)
-                println(byteArray)
 
-                // Check if data was read
                 if (bytesRead > 0) {
-                    println("Received $bytesRead bytes")
                     val message = byteArray.sliceArray(0 until bytesRead).toString(Charsets.UTF_8)
-                    println(message)
-                    if (message.endsWith("!")) {
-                        println("Message end detected")
-                    }
-                } else {
-                    println("Server closed a connection")
-                    socket.close()
-                    selectorManager.close()
-                    exitProcess(0)
+                    println("Received from server: $message")
                 }
+//                else {
+//                    println("Server closed connection.")
+//                    socket.close()
+//                    selectorManager.close()
+//                    break
+//                }
+            }
+        }
 
-                while (true) {
-                    val myMessage = readln()
-                    sendChannel.writeFully("$myMessage\n".toByteArray())
-                }
+        // Coroutine for sending data to the server
+        launch(Dispatchers.IO) {
+            while (true) {
+                val myMessage = readln() // Read input from the user
+                sendChannel.writeFully(myMessage.toByteArray())
             }
         }
     }
