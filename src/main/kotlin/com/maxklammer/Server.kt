@@ -74,9 +74,8 @@ suspend fun handleClient(
                     val response = "Hey, $receivedName".toByteArray()
                     sendChannel.writeFully(response)
 
-                    // You can choose to close the socket after sending the response if desired:
-                    // socket.close()
-                    break
+                    // Reset the StringBuilder for the next message
+                    stringBuilder.clear()
                 }
             }
         }

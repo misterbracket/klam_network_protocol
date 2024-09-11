@@ -28,12 +28,6 @@ fun client() {
                     val message = byteArray.sliceArray(0 until bytesRead).toString(Charsets.UTF_8)
                     println("Received from server: $message")
                 }
-//                else {
-//                    println("Server closed connection.")
-//                    socket.close()
-//                    selectorManager.close()
-//                    break
-//                }
             }
         }
 
